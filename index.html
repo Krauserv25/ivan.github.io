@@ -1,0 +1,755 @@
+<html>
+	<head>
+		<title>POSTAL DE NADAL</title>
+		<script type="text/javascript" src="JS/kinetikJS.js"></script>
+	</head>
+	<body style="background-color:#424242; background-image:url('img/backPaper.jpg');">
+	    <div id="container" style="margin-top:7%; height:69.5%; border-style:ridge; border-width:10px; border-color:black;"></div>
+	    <script defer="defer">
+	      var imageBook;
+	      var isInFloor;
+	      var santa;
+	      var scoreRegalos;
+	      var maxPresents;
+	      var totalPresents;
+	      var totalVidas;
+	      var vida1;
+	      var vida2;
+	      var vida3;
+	      var vidaOscilation;
+	      var rockObj;
+	      var back1;
+	      var back2;
+	      var Back_Move;
+
+	      var menuSound = new Audio('sounds/menu.mp3');
+	      var gameSound = new Audio('sounds/gameSound.mp3');
+	      var presentSound = new Audio('sounds/getPresent.wav');
+	      var painSound = new Audio('sounds/pain.mp3');
+	      var jumpSound = new Audio('sounds/jump.wav');
+
+	      var layer;
+	      var layerIntro;
+	      var layerGameOver;
+	      var transition = false;
+
+	      var backgroundMountains1;
+	      var backgroundMountains2;
+	      layerIntro = new Kinetic.Layer();
+      	layer = new Kinetic.Layer();
+      	layerGameOver = new Kinetic.Layer();
+      	imageBook = new Image();
+      	backGameOver = new Image();
+      	backgroundMountains1 = new Image();
+      	backgroundMountains2 = new Image();
+      		
+  		var Left_Move;
+     	var Right_Move;
+        var Up_Move;
+     	var Down_Move;
+        var Jump_UP;
+       	var Jump_DOWN;
+
+		var introBook = new Kinetic.Image //Imagen de introducción
+        ({
+          x: 0,
+          y: 0,
+          image: imageBook,
+          width: 1300,
+          height: 450
+        });
+
+     	init();
+
+     	var gameOverImage = new Kinetic.Image //Imagen de gameover
+        ({
+          x: 0,
+          y: 0,
+          image: backGameOver,
+          width: 1300,
+          height: 450
+        });
+
+	      function init () //Función que inicializa los valores
+	      {
+	      	gameSound.pause();
+			menuSound.src = ""; //Esto lo hago para evitar que la música siga en el mismo punto que se paró
+			menuSound.src = 'sounds/menu.mp3';
+			menuSound.loop = true;
+	     	menuSound.play();
+   	
+	      	layerIntro.add(introBook);
+	      	  imageBook.onload = function() 
+		      {
+		      	stage.add(layerIntro);
+		      }	      	
+		      imageBook.src = 'img/santaPaper.png';
+				isInFloor = true;
+		      	maxPresents = 300;
+		      	totalPresents = 0;
+		      	totalVidas = 3;			
+	      }
+
+	      var stage = new Kinetic.Stage
+	      ({
+	        container: 'container',
+	        width: 1238,
+	        height: 435
+	      });	      
+
+	      introBook.on('mousedown', function() //Evento de click para la pantalla inicial y empezar el juego
+	      {
+	      	layerIntro.remove();
+	     	menuSound.pause();	     	
+	      	play(); 
+      	  });
+
+	      function play() //Función que permite jugar
+	      {
+	      	//Se necesitan 2 backgrounds para el efecto parallax
+      		back1 = new Kinetic.Image 
+	        ({
+	          x: 0,
+	          y: -250,
+	          image: backgroundMountains1,
+	          width: 1300,
+	          height: 700
+	        });
+
+	     	layer.add(back1);
+
+     		back2 = new Kinetic.Image
+	        ({
+	          x: 1300,
+	          y: -250,
+	          image: backgroundMountains2,
+	          width: 1300,
+	          height: 700
+	        });
+
+	     	layer.add(back2);
+
+			gameSound.src = "";
+			gameSound.src = 'sounds/gameSound.mp3';
+			gameSound.loop = true;
+	     	gameSound.play();
+
+	     	//Animación que desplaza los backgrounds a la izuierda y los reposiciona a la derecha cuando llegan a un límite
+	     	Back_Move = new Kinetic.Animation(function(frame) 
+	        {
+	        	var auxX_1 = back1.getX();
+	        	var auxX_2 = back2.getX();
+
+	        	back1.setX((auxX_1-15));
+	        	back2.setX((auxX_2-15));
+
+	        	if (back1.getX() <= -1300) 
+        		{
+        			back1.setX(1290);	        			
+        		}
+
+        		if (back2.getX() <= -1300) 
+        		{
+        			back2.setX(1285);	        			
+        		}
+	        },layer);
+
+	        Back_Move.start();
+
+	      rockObj = new Image();
+	      var santaObj = new Image();
+
+	      santaObj.onload = function() 
+	      {
+	        santa = new Kinetic.Image
+	        ({
+	          x: 0,
+	          y: 300,
+	          image: santaObj,
+	          width: 106,
+	          height: 118
+	        });
+
+	     	layer.add(santa);
+
+	     	//SCORE JUEGO
+	     	var scoreImage = new Image();
+	     	
+     		var presentScore = new Kinetic.Image
+	        ({
+	          x: 50,
+	          y: 10,
+	          image: scoreImage,
+	          width: 100,
+	          height: 100
+	        });
+
+		    var ScoreRect = new Kinetic.Rect({
+		        x: 50,
+		        y: 20,
+		        stroke: 'red',
+		        strokeWidth: 5,
+		        fill: '#ddd',
+		        width: 300,
+		        height: 80,
+		        cornerRadius: 10
+		      });
+
+			 scoreRegalos = new Kinetic.Text({
+			    x: 185,
+			    y: 27,
+			    text: '0/10',
+			    fontSize: 70,
+			    fontFamily: 'Arial',
+			    fill: 'black'
+			  });
+
+			 layer.add(ScoreRect);
+			 layer.add(presentScore);
+			 layer.add(scoreRegalos);
+
+			 //VIDAS JUEGO
+	     	var lifeImage = new Image();
+	     	
+     		vida1 = new Kinetic.Image
+	        ({
+	          x: 900,
+	          y: 10,
+	          image: lifeImage,
+	          width: 100,
+	          height: 100
+	        });	
+
+	        vida2 = new Kinetic.Image
+	        ({
+	          x: 1000,
+	          y: 10,
+	          image: lifeImage,
+	          width: 100,
+	          height: 100
+	        });		
+
+	        vida3 = new Kinetic.Image
+	        ({
+	          x: 1100,
+	          y: 10,
+	          image: lifeImage,
+	          width: 100,
+	          height: 100
+	        });
+
+	        //Animación de rotación y desplazamiento para las vidas una vez perdidas
+	        vidaOscilation = new Kinetic.Animation(function(frame) 
+	        {
+	        	switch(totalVidas)
+        		{
+        			case 3:
+        			vida1.rotate(-1*frame.timeDiff/100);
+        			vida1.setY(vida1.getY()-1);
+
+        			if (vida1.getY() < 0)
+        			{
+        				vidaOscilation.stop();
+        				vida1.remove();
+        				totalVidas--;
+        			}
+        			break;
+
+        			case 2:
+        			vida2.rotate(-1*frame.timeDiff/100);
+        			vida2.setY(vida2.getY()-1);
+
+        			if (vida2.getY() < 0)
+        			{
+        				vidaOscilation.stop();
+        				vida2.remove();
+        				totalVidas--;
+        			}
+        			break;
+
+        			case 1:
+        			vida3.rotate(-1*frame.timeDiff/100);
+        			vida3.setY(vida3.getY()-1);
+
+        			if (vida3.getY() < 0) //Si es la última vida se pierde la partida
+        			{
+        				vidaOscilation.stop();
+        				vida3.remove();
+        				totalVidas--;
+        				gameOver();
+        			}
+        			break;
+        		}
+	        },layer);
+
+		 	var LifesRect = new Kinetic.Rect({
+	        x: 900,
+	        y: 20,
+	        stroke: 'red',
+	        strokeWidth: 5,
+	        fill: '#ddd',
+	        width: 300,
+	        height: 80,
+	        cornerRadius: 10
+	      });
+
+		 layer.add(LifesRect);
+		 layer.add(vida1);
+		 layer.add(vida2);
+		 layer.add(vida3);
+
+	    setPresent();
+     	setRock();
+
+     	stage.add(layer);
+
+     	//ANIMACIONES PLAYER
+     	Left_Move = new Kinetic.Animation(function(frame) 
+        {
+        	var auxX = santa.getX();
+        	if (isInFloor && auxX > 2)
+        	{
+	        	santa.setX((auxX-10));
+        	}
+        	else Left_Move.stop();
+        },layer);
+
+     	Right_Move = new Kinetic.Animation(function(frame) 
+        {
+        	var auxX = santa.getX();
+        	if (isInFloor && auxX < 1100)
+        	{		        	
+	        	santa.setX((auxX+10));	
+	        }
+	        else Right_Move.stop();        	
+        },layer);
+
+        Up_Move = new Kinetic.Animation(function(frame) 
+        {
+        	var auxY = santa.getY();
+        	if (isInFloor && auxY > 100)
+        	{
+	        	santa.setY((auxY-10));	        
+        	}
+        	else Up_Move.stop();	
+        },layer);
+
+     	Down_Move = new Kinetic.Animation(function(frame) 
+        {
+        	var auxY = santa.getY();
+        	if (isInFloor && auxY < 320)
+        	{
+	        	santa.setY((auxY+10));	 
+        	}
+        	else Down_Move.stop();       	
+        },layer);
+
+        Jump_UP = new Kinetic.Animation(function(frame) 
+        {
+        	var auxY = santa.getY();
+        	santa.setY((auxY-10));	        	
+        },layer);
+
+       	Jump_DOWN = new Kinetic.Animation(function(frame) 
+        {
+        	var auxY = santa.getY();
+        	santa.setY((auxY+10));	        	
+        },layer);
+        transition = false;
+
+
+        //EVENTO DE TECLA PULSADA
+	    window.addEventListener('keydown', function(e) 
+		{
+			var auxX = santa.getX();
+			var auxY = santa.getY();
+
+			switch (e.keyCode)
+			{
+				case 65: //LEFT
+				Right_Move.stop();
+				Left_Move.start();
+				break;
+
+				case 68: //RIGHT
+				Left_Move.stop();
+				Right_Move.start();
+				break;
+
+				case 87: //UP
+				Down_Move.stop();
+				Up_Move.start();
+				break;
+
+				case 83: //DOWN
+				Up_Move.stop();
+				Down_Move.start();
+				break;
+
+				case 32: //SPACE
+				if (isInFloor)
+				{
+					jumpSound.play();
+					isInFloor = false;
+					Jump_UP.start();
+					setTimeout(function()
+					{
+						Jump_UP.stop();
+						Jump_DOWN.start();
+						setTimeout(function()
+							{
+								Jump_DOWN.stop();
+								isInFloor = true;
+							}, 300);
+					},300);
+				}
+				break;
+			}
+		});
+
+	    //EVENTO DE TECLA SOLTADA
+		window.addEventListener('keyup', function(e) 
+		{
+			switch (e.keyCode)
+			{
+				case 65: //LEFT
+				Left_Move.stop();
+				break;
+
+				case 68: //RIGHT
+				Right_Move.stop();
+				break;
+
+				case 87: //UP
+				Up_Move.stop();
+				break;
+
+				case 83: //DOWN
+				Down_Move.stop();
+				break;
+			}
+		});
+
+		scoreImage.src = 'img/regalo.png';
+		lifeImage.src = 'img/vida.png';
+		}
+
+		rockObj.src = 'img/rock.png';
+		santaObj.src = 'img/santa.png';
+
+		backgroundMountains1.src = 'img/backMountains1.png';
+		backgroundMountains2.src = 'img/backMountains2.png';
+	}
+
+//función que genera un nuevo regalo aleatorio
+	function setPresent ()
+	{
+		var auxX = Math.floor(Math.random()*(4000)+1350);
+		var auxY = Math.floor(Math.random()*(200)+170);
+		var auxWidth = Math.floor(Math.random()*(40)+25);
+		var auxHeight = Math.floor(Math.random()*(26)+25);
+
+		var colorBox = getColor(Math.floor(Math.random()*(6)+0));
+		var colorLazo = getColor(Math.floor(Math.random()*(6)+0));
+
+		while (colorLazo === colorBox) //Esto impide que el color del lazo sea el mismo que el de la caja
+		{
+			colorLazo = getColor(Math.floor(Math.random()*(6)+0));
+		}
+		
+		var rect = new Kinetic.Rect({
+	        x: auxX,
+	        y: auxY,
+	        width: auxWidth,
+	        height: auxHeight,
+	        fill: colorBox,
+	        stroke: 'black',
+	        strokeWidth: 4
+	      });
+
+		var lazoVertical = new Kinetic.Rect({
+	        x: auxX+(auxWidth/3), //Empieza en un tercio del ancho de regalo
+	        y: auxY,
+	        width: (auxWidth/3),
+	        height: auxHeight,
+	        fill: colorLazo,
+	        stroke: 'black',
+	        strokeWidth: 1
+		});
+
+		var lazoHorizontal = new Kinetic.Rect({
+	        x: auxX,
+	        y: auxY+(auxHeight/3), //Empieza en un tercio del alto de regalo
+	        width: auxWidth,
+	        height: (auxHeight/3),
+	        fill: colorLazo,
+	        stroke: 'black',
+	        strokeWidth: 1
+		});
+
+		var lazoSuperior = new Kinetic.Circle({
+	        x: auxX+(auxWidth/3),
+	        y: auxY-4,
+	        radius: 8,
+	        fill: 'transparent',
+	        stroke: colorLazo,
+	        strokeWidth: 4
+      });
+
+		var lazoInferior = new Kinetic.Circle({
+	        x: auxX+(auxWidth/3)+(auxWidth/3),
+	        y: auxY-4,
+	        radius: 8,
+	        fill: 'transparent',
+	        stroke: colorLazo,
+	        strokeWidth: 4
+      });
+
+		layer.add(rect);
+		layer.add(lazoVertical);
+		layer.add(lazoHorizontal);
+		layer.add(lazoSuperior);
+		layer.add(lazoInferior);
+
+		//Animación que mueve el regalo hacia la izquierda
+		var Present_Move = new Kinetic.Animation(function(frame) 
+        {
+        	var x_Rect = rect.getX();
+
+        	if (x_Rect >= 0) //Si el regalo está situado por la pantalla
+        	{
+	        	var x_LazoVertical = lazoVertical.getX();
+	        	var x_LazoHorizontal = lazoHorizontal.getX();
+	        	var x_LazoSuperior = lazoSuperior.getX();
+	        	var x_LazoInferior = lazoInferior.getX();
+
+	        	rect.setX((x_Rect-15));
+	        	lazoVertical.setX((x_LazoVertical-15));
+	        	lazoHorizontal.setX((x_LazoHorizontal-15));
+	        	lazoSuperior.setX((x_LazoSuperior-15));
+	        	lazoInferior.setX((x_LazoInferior-15));
+
+        		var collision = checkCollision(rect.getX(), rect.getY());
+        		if (collision) //Si el regalo ha sido cogido...
+	        	{
+	        		presentSound.play();
+	        		totalPresents++;
+
+	        		scoreRegalos.setText(totalPresents+"/10"); //Actualizamos puntuación
+	        		rect.remove();
+					lazoVertical.remove();
+					lazoHorizontal.remove();
+					lazoSuperior.remove();
+					lazoInferior.remove();
+					Present_Move.stop();
+
+					if (totalPresents === 10) //Si se han cogido todos los regalos...
+					{
+						gameOver(); //Finaliza la partida
+					}
+					else
+					setTimeout(function() //Una vez cogido el regalo, se genera otro en un tiempo determinado
+					{
+						setPresent();   	
+					},100);
+	        	}
+	        	else
+	        	{
+
+//Si se cambia de pantalla a la de gameover, las animaciones de los regalos se paran y el regalo se destruye     		
+	        		if (transition) 
+	        		{
+	        			Present_Move.stop();
+						rect.remove();
+						lazoVertical.remove();
+						lazoHorizontal.remove();
+						lazoSuperior.remove();
+						lazoInferior.remove();
+	        		}
+	        	}    	        	
+        	}
+        	else //Si el regalo se ha ido de la pantalla se para su animación y se destruye para generar otro
+        	{
+				rect.remove();
+				lazoVertical.remove();
+				lazoHorizontal.remove();
+				lazoSuperior.remove();
+				lazoInferior.remove();
+				Present_Move.stop();
+
+				setTimeout(function()
+				{
+					setPresent();   	
+				},100);
+        	}
+        },layer);
+
+		Present_Move.start();
+	}
+
+	//Función que dependiendo del código aleatorio devuelve un color
+	function getColor (code)
+	{
+		var auxColor;
+
+		switch(code)
+		{
+			case 0:
+			auxColor = "red";
+			break;
+
+			case 1:
+			auxColor = "green";
+			break;
+
+			case 2:
+			auxColor = "orange";
+			break;
+
+			case 3:
+			auxColor = "blue";
+			break;
+
+			case 4:
+			auxColor = "yellow";
+			break;
+
+			case 5:
+			auxColor = "purple";
+			break;
+
+			case 6:
+			auxColor = "cyan";
+			break;
+		}
+
+		return auxColor;
+	}
+
+	//Función que detecta colisión entre el player y los regalos o rocas
+	function checkCollision (pos_X, pos_Y)
+	{
+		if (pos_X >= santa.getX() && pos_X <= (santa.getWidth() + santa.getX()) &&
+			pos_Y >= santa.getY() && pos_Y <= (santa.getHeight() + santa.getY()))
+			{
+				return true;
+			}
+			
+			return false;
+	}
+
+	//Función que genera una nueva roca
+	function setRock ()
+	{
+		var auxX = Math.floor(Math.random()*(4000)+1350);
+		var auxY = Math.floor(Math.random()*(200)+170);
+
+        rock = new Kinetic.Image
+        ({
+          x: auxX,
+          y: auxY,
+          image: rockObj,
+          width: 60,
+          height: 60
+        });		
+
+		layer.add(rock);
+
+		//Animación de la roca para moverse
+		var Rock_Move = new Kinetic.Animation(function(frame) 
+        {
+        	var x_Rock = rock.getX();
+
+        	if (x_Rock >= 0) //Si se encuentra en la pantalla
+        	{
+	        	rock.setX((x_Rock-15));
+
+        		var collision = checkCollision(rock.getX(), rock.getY());
+        		if (collision) //Si ha colisionado contra el player...
+	        	{
+	        		vidaOscilation.start();
+
+	        		switch(totalVidas) //Depende del número de vidas restantes, se indica el punto desde donde va a rotar
+	        		{
+	        			case 3:
+	        			vida1.setOffset([50,50]);
+	        			break;
+
+	        			case 2:
+	        			vida2.setOffset([50,50]);
+	        			break;
+
+	        			case 1:
+	        			vida3.setOffset([50,50]);
+	        			break;
+	        		}
+
+					painSound.play();
+
+	        		rock.remove();
+
+					Rock_Move.stop();
+					setTimeout(function() //Genera otra roca en cierto tiempo
+					{
+						setRock();   	
+					},100);
+	        	}
+	        	else
+	        	{
+	        		if (transition) //Se destruye la roca en caso de ir al gameover tras parar su animación
+	        		{
+	        			Rock_Move.stop();
+	        			rock.remove();
+	        		}
+	        	}        	
+        	}
+        	else //Si está fuera de los límites de la pantalla se para la animación y se elimina la roca
+        	{
+				rock.remove();
+				Rock_Move.stop();
+
+				setTimeout(function()
+				{
+					setRock();   	
+				},100);
+        	}
+        },layer);
+
+		Rock_Move.start();
+	}
+
+	//Función que visualiza la pantalla final y en cierto tiempo regresa al inicio
+	function gameOver ()
+	{	
+		transition = true;
+
+		//Para todas las animaciones en marcha
+		Left_Move.stop();
+     	Right_Move.stop();
+        Up_Move.stop();
+     	Down_Move.stop();
+        Jump_UP.stop();
+       	Jump_DOWN.stop();
+		Back_Move.stop();
+
+		//Se limpia el layer para dibujar el nuevo
+		layer.clear(); 
+		layer.remove();
+
+		layerGameOver.add(gameOverImage);
+
+  	  backGameOver.onload = function() 
+      {
+      	stage.add(layerGameOver);
+      }
+      backGameOver.src = 'img/felicitacion.png';
+
+		setTimeout(function() //En determinado tiempo, vuelve a la pantalla inicial
+		{
+			layerGameOver.remove();
+			init();
+		},6000);
+	}
+	    </script>
+	</body>
+</html>
